@@ -25,6 +25,32 @@ def load_questions():
         return question_list
 
 
+def check_answer(num, checkbox_status):
+    good_answers = questions[num]["answer"].split(',')
+    user_answers = []
+
+    letters = {0: 'a', 1: 'b', 2: 'c', 3: 'd', 4: 'e', 5: 'f', 6: 'g', 7: 'h', 8: 'i'}
+
+    count = 0
+
+    for checkbox in checkbox_status:  # Add user answer in array user_answers
+        if checkbox.get() == 1:
+            user_answers.append(letters[count])
+        count += 1
+
+    # print("your answers = " + ", ".join(user_answers))
+    # print("good answers = " + ", ".join(good_answers))
+
+    global user_score
+    if user_answers == good_answers:  # Compare user_answers with good_answer, and update the score
+        user_score += point_for_good_answer
+    else:
+        user_score += point_for_wrong_answer
+
+    # print("Your new score is ", user_score, " / ", total)
+    display_question(num + 1)
+
+
 def display_question(num):
     # We delete element in the frame to delete the welcoming messages
     for widgets in frame.winfo_children():
@@ -47,16 +73,25 @@ def display_question(num):
 
         # Proposals
         label_proposals = []
+        checkbox_proposals = []
+        checkbox_status = []
         proposals = questions[num]["proposal"].split(",")
+        answers = questions[num]["answer"].split(",")
         count_proposal = 0
+
         for proposal in proposals:
-            label_proposals.append(Label(frame, text=proposal, font=("Courrier", 10), bg='#41B77F', fg='#FFFFFF'))
-            label_proposals[count_proposal].pack()
+            checkbox_status.append(IntVar())
+            checkbox_proposals.append((Checkbutton(frame, text=proposal, variable=checkbox_status[count_proposal],
+                                                   onvalue=1, offvalue=0,
+                                                   font=("Courrier", 10), selectcolor='black', fg='white', bg='#41B77F')))
+            checkbox_proposals[count_proposal].pack()
+            # label_proposals.append(Label(frame, text=proposal, font=("Courrier", 10), bg='#41B77F', fg='#FFFFFF'))
+            # label_proposals[count_proposal].pack()
             count_proposal += 1
 
         # Add Button
         q_button = Button(frame, text="OK", font=("Courrier", 15), bg='white', fg='#41B77F',
-                          command=lambda: display_question(num + 1))
+                          command=lambda: check_answer(num, checkbox_status))
         q_button.pack(pady=20, fill=X)
     else:
         # Message End of the game
@@ -73,9 +108,22 @@ def display_question(num):
         label_image.image = picture  # Anchor the image to the label
         label_image.pack()
 
+        # Text to display the score
+        txt_score = "Your score is " + str(user_score) + " / " + str(total)
+        label_score = Label(frame, text=txt_score, font=("Courrier", 30), bg='#41B77F',
+                            fg='#FFFFFF')
+        label_score.pack()
+
 
 # We load the questions
 questions = load_questions()
+
+# Game variables initialization
+user_score = 0
+point_for_good_answer = 5
+point_for_no_answer = 0
+point_for_wrong_answer = -2
+total = point_for_good_answer * len(questions)
 
 # Window creation
 window = Tk()
