@@ -14,12 +14,16 @@ def load_questions():
 
         for line in lines:
             split = line.split(";")
-            question_list.append({
-                "question": split[0],
-                "proposal": split[1],
-                "answer": split[2],
-                "picture": split[3]
-            })
+            if len(split) != 4:  # If the line doesn't have 4 parameter, we display the line in error and exit program
+                print("Format error at line : " + line)
+                exit(0)
+            else:
+                question_list.append({
+                    "question": split[0],
+                    "proposal": split[1],
+                    "answer": split[2],
+                    "picture": split[3]
+                })
 
         questions_file.close()
         return question_list
@@ -38,16 +42,14 @@ def check_answer(num, checkbox_status):
             user_answers.append(letters[count])
         count += 1
 
-    # print("your answers = " + ", ".join(user_answers))
-    # print("good answers = " + ", ".join(good_answers))
-
     global user_score
     if user_answers == good_answers:  # Compare user_answers with good_answer, and update the score
         user_score += point_for_good_answer
     else:
         user_score += point_for_wrong_answer
+        global wrong_answers
+        wrong_answers.append(num)
 
-    # print("Your new score is ", user_score, " / ", total)
     display_question(num + 1)
 
 
@@ -59,7 +61,7 @@ def display_question(num):
     if num < len(questions):
         # Question
         label_question = Label(frame, text=questions[num]["question"], font=("Courrier", 20), bg='#41B77F',
-                               fg='#FFFFFF')
+                               fg='#FFFFFF', wraplength=800)
         label_question.pack()
 
         # Create an object of tkinter ImageTk
@@ -72,21 +74,19 @@ def display_question(num):
         label_image.pack()
 
         # Proposals
-        label_proposals = []
         checkbox_proposals = []
         checkbox_status = []
         proposals = questions[num]["proposal"].split(",")
-        answers = questions[num]["answer"].split(",")
+        questions[num]["answer"].split(",")
         count_proposal = 0
 
         for proposal in proposals:
             checkbox_status.append(IntVar())
             checkbox_proposals.append((Checkbutton(frame, text=proposal, variable=checkbox_status[count_proposal],
                                                    onvalue=1, offvalue=0,
-                                                   font=("Courrier", 10), selectcolor='black', fg='white', bg='#41B77F')))
+                                                   font=("Courrier", 10), selectcolor='black', fg='white',
+                                                   bg='#41B77F')))
             checkbox_proposals[count_proposal].pack()
-            # label_proposals.append(Label(frame, text=proposal, font=("Courrier", 10), bg='#41B77F', fg='#FFFFFF'))
-            # label_proposals[count_proposal].pack()
             count_proposal += 1
 
         # Add Button
@@ -113,6 +113,30 @@ def display_question(num):
         label_score = Label(frame, text=txt_score, font=("Courrier", 30), bg='#41B77F',
                             fg='#FFFFFF')
         label_score.pack()
+        label_explanation = Label(frame, text="Voici les réponses on vous avez répondu faux :", font=("Courrier", 30),
+                                  bg='#41B77F',
+                                  fg='#FFFFFF')
+        label_explanation.pack()
+
+        label_wronganswers = []
+        count_wronganswers = 0
+        global wrong_answers
+        for wrong_answer in wrong_answers:
+            label_wronganswers.append(
+                Label(frame, text=questions[wrong_answer]["question"], font=("Courrier", 10), bg='#41B77F',
+                      fg='#FFFFFF', wraplength=800))
+            label_wronganswers[count_wronganswers].pack()
+
+            label_wronganswers.append(
+                Label(frame, text=questions[wrong_answer]["proposal"], font=("Courrier", 10), bg='#41B77F',
+                      fg='#FFFFFF', wraplength=800))
+            label_wronganswers[count_wronganswers + 1].pack()
+
+            label_wronganswers.append(
+                Label(frame, text=questions[wrong_answer]["answer"], font=("Courrier", 10), bg='#41B77F',
+                      fg='#FFFFFF'))
+            label_wronganswers[count_wronganswers + 2].pack()
+            count_wronganswers += 3
 
 
 # We load the questions
@@ -120,10 +144,10 @@ questions = load_questions()
 
 # Game variables initialization
 user_score = 0
-point_for_good_answer = 5
-point_for_no_answer = 0
-point_for_wrong_answer = -2
+point_for_good_answer = 1
+point_for_wrong_answer = 0
 total = point_for_good_answer * len(questions)
+wrong_answers = []
 
 # Window creation
 window = Tk()
